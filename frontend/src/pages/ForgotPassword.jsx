@@ -1,30 +1,40 @@
+import { useState } from "react";
+import api from "../services/api";
+import toast from "react-hot-toast";
+
 function ForgotPassword() {
   const [email, setEmail] = useState("");
 
   const submit = async () => {
-    await api.post("/auth/forgot-password", {email});
-    alert("If email exists, reset link sent");
+    try {
+      await api.post("/auth/forgot-password", { email });
+      toast.success("If email exists, reset link sent");
+    } catch {
+      toast.error("Something went wrong");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow w-full max-w-md">
+    <div className="auth-container">
+      <div className="auth-card">
 
-        <h2 className="text-xl font-semibold mb-4">Forgot Password</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Forgot Password
+        </h2>
 
         <input
-          className="w-full p-3 border rounded-lg mb-4"
+          className="input mb-4"
           placeholder="Enter Email"
-          onChange={(e)=>setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
-        <button
-          onClick={submit}
-          className="w-full bg-indigo-600 text-white py-3 rounded-lg"
-        >
+        <button onClick={submit} className="btn-primary">
           Send Reset Link
         </button>
+
       </div>
     </div>
   );
 }
+
+export default ForgotPassword;
