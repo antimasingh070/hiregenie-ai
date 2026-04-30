@@ -1,20 +1,33 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+# ================= REQUEST SCHEMAS =================
 
 class UserCreate(BaseModel):
-    full_name: str
+    first_name: str
+    last_name: str
     email: EmailStr
+    phone: Optional[str]
     password: str
-    role: str = "candidate"
+    role: Optional[str] = "user"
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserResponse(BaseModel):
-    id: int
-    full_name: str
-    email: str
-    role: str
+class ForgotPassword(BaseModel):
+    email: EmailStr
 
-    class Config:
-        from_attributes = True
+class ResetPassword(BaseModel):
+    token: str
+    new_password: str
+
+# ================= RESPONSE SCHEMAS =================
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+class MessageResponse(BaseModel):
+    message: str
