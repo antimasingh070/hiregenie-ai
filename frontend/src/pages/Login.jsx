@@ -4,8 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
-  const [error, setError] = useState(""); // Error message dikhane ke liye
-  const [loading, setLoading] = useState(false); // Button disable karne ke liye
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -13,61 +13,68 @@ function Login() {
   });
 
   const submit = async (e) => {
-    e.preventDefault(); // Page refresh hone se rokne ke liye
+    e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
       const res = await api.post("/auth/login", form);
-
-      // Token save karna
       localStorage.setItem("token", res.data.access_token);
-
-      // Dashboard par bhejna
       navigate("/dashboard");
     } catch (err) {
-      // Backend se aane wala error dikhana
-      setError(err.response?.data?.detail || "Invalid email or password");
+      setError(err.response?.data?.detail || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", padding: "20px" }}>
-      <h1>Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-semibold text-center mb-6">
+          Welcome Back
+        </h2>
 
-      <form onSubmit={submit}>
-        <div style={{ marginBottom: "10px" }}>
+        {error && (
+          <div className="bg-red-100 text-red-600 p-2 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={submit} className="space-y-4">
           <input
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
             type="email"
             placeholder="Email"
             required
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            style={{ width: "100%", padding: "8px" }}
+            onChange={(e)=>setForm({...form,email:e.target.value})}
           />
-        </div>
 
-        <div style={{ marginBottom: "10px" }}>
           <input
-            placeholder="Password"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
             type="password"
+            placeholder="Password"
             required
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            style={{ width: "100%", padding: "8px" }}
+            onChange={(e)=>setForm({...form,password:e.target.value})}
           />
+
+          <button
+            className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <div className="mt-4 text-sm text-center">
+          <p>
+            No account? <Link to="/signup" className="text-indigo-600">Signup</Link>
+          </p>
+          <Link to="/forgot-password" className="text-indigo-600">
+            Forgot Password?
+          </Link>
         </div>
-
-        <button type="submit" disabled={loading} style={{ width: "100%", padding: "10px" }}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <div style={{ marginTop: "15px", display: "flex", flexDirection: "column", gap: "5px" }}>
-        <p>No account? <Link to="/signup">Signup</Link></p>
-        <Link to="/forgot-password">Forgot Password?</Link>
       </div>
     </div>
   );

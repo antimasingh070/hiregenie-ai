@@ -1,30 +1,30 @@
-import { useState } from "react";
-import api from "../services/api";
-
 function ForgotPassword() {
   const [email, setEmail] = useState("");
 
   const submit = async () => {
-      try {
-          await api.post("/auth/forgot-password", {email});
-          alert("Agar ye email registered hai, toh aapko reset link bhej diya gaya hai.");
-      } catch (err) {
-          alert("Kuch error aaya, dobara koshish karein.");
-      }
+    await api.post("/auth/forgot-password", {email});
+    alert("If email exists, reset link sent");
   };
 
   return (
-    <div>
-      <h1>Forgot Password</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-xl shadow w-full max-w-md">
 
-      <input
-        placeholder="Enter Email"
-        onChange={(e)=>setEmail(e.target.value)}
-      />
+        <h2 className="text-xl font-semibold mb-4">Forgot Password</h2>
 
-      <button onClick={submit}>Verify</button>
+        <input
+          className="w-full p-3 border rounded-lg mb-4"
+          placeholder="Enter Email"
+          onChange={(e)=>setEmail(e.target.value)}
+        />
+
+        <button
+          onClick={submit}
+          className="w-full bg-indigo-600 text-white py-3 rounded-lg"
+        >
+          Send Reset Link
+        </button>
+      </div>
     </div>
   );
 }
-
-export default ForgotPassword;

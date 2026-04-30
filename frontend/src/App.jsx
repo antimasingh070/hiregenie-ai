@@ -4,6 +4,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import CreateJob from "./pages/CreateJob";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<div>Page Not Found</div>} />
+        <Route path="/create-job" element={<CreateJob />} />
       </Routes>
     </BrowserRouter>
   );

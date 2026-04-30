@@ -2,15 +2,16 @@ from fastapi import FastAPI
 from app.db.session import Base, engine
 from app.api.auth import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
-
-# Create DB tables (for dev; in prod use migrations like Alembic)
+from app.models.job import Job
 Base.metadata.create_all(bind=engine)
+from app.api.job import router as job_router
+
 
 app = FastAPI(title="HireGenie AI")
 
 # Routers
 app.include_router(auth_router)
-
+app.include_router(job_router)
 # CORS
 app.add_middleware(
     CORSMiddleware,

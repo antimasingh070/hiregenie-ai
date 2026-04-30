@@ -7,14 +7,26 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   const token = searchParams.get("token");
+
   const [newPassword, setNewPassword] = useState("");
-  const [status, setStatus] = useState({ loading: false, error: "" });
+  const [status, setStatus] = useState({
+    loading: false,
+    error: "",
+    success: ""
+  });
 
   const handleReset = async (e) => {
     e.preventDefault();
-    if (!token) return setStatus({ ...status, error: "Invalid reset link." });
 
-    setStatus({ loading: true, error: "" });
+    if (!token) {
+      return setStatus({
+        loading: false,
+        error: "Invalid or expired reset link.",
+        success: ""
+      });
+    }
+
+    setStatus({ loading: true, error: "", success: "" });
 
     try {
       await api.post("/auth/reset-password", {
@@ -22,53 +34,98 @@ function ResetPassword() {
         new_password: newPassword
       });
 
-      alert("Success! Your password has been updated.");
-      navigate("/login");
+      setStatus({
+        loading: false,
+        error: "",
+        success: "Password updated successfully!"
+      });
+
+      setTimeout(() => navigate("/login"), 2000);
+
     } catch (err) {
-      const msg = err.response?.data?.detail || "Session expired. Please request a new link.";
-      setStatus({ loading: false, error: msg });
+      setStatus({
+        loading: false,
+        error:
+          err.response?.data?.detail ||
+          "Session expired. Please request a new link.",
+        success: ""
+      });
     }
   };
 
   return (
-    <div style={{ maxWidth: "380px", margin: "100px auto", fontFamily: "Arial" }}>
-      <h2 style={{ marginBottom: "20px" }}>Secure Password Reset</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 
-      {status.error && (
-        <div style={{ color: "#d32f2f", backgroundColor: "#fdecea", padding: "10px", borderRadius: "4px", marginBottom: "20px" }}>
-          {status.error}
-        </div>
-      )}
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
 
-      <form onSubmit={handleReset}>
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>New Password</label>
-          <input
-            type="password"
-            placeholder="Min. 8 characters"
-            required
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            style={{ width: "100%", padding: "12px", boxSizing: "border-box", border: "1px solid #ccc", borderRadius: "4px" }}
-          />
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Reset Your Password
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Enter a new secure password to continue
+          </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={status.loading || !token}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#1976d2",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: status.loading ? "not-allowed" : "pointer"
-          }}
-        >
-          {status.loading ? "Processing..." : "Confirm New Password"}
-        </button>
-      </form>
+        {/* Error Message */}
+        {status.error && (
+          <div className="bg-red-100 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            {status.error}
+          </div>
+        )}
+
+        {/* Success Message */}
+        {status.success && (
+          <div className="bg-green-100 text-green-600 p-3 rounded-lg mb-4 text-sm">
+            {status.success}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleReset} className="space-y-4">
+
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">
+              New Password
+            </label>
+
+            <input
+              type="password"
+              placeholder="Minimum 8 characters"
+              required
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={status.loading || !token}
+            className={`w-full py-3 rounded-lg text-white font-medium transition ${
+              status.loading || !token
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
+          >
+            {status.loading ? "Updating..." : "Update Password"}
+          </button>
+
+        </form>
+
+        {/* Footer */}
+        <div className="text-center mt-5 text-sm text-gray-500">
+          Back to{" "}
+          <span
+            onClick={() => navigate("/login")}
+            className="text-indigo-600 cursor-pointer hover:underline"
+          >
+            Login
+          </span>
+        </div>
+
+      </div>
     </div>
   );
 }
