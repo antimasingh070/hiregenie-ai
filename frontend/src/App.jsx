@@ -19,6 +19,7 @@ import RecruiterApplications from "./pages/recruiter/Applications";
 import CandidateDashboard from "./pages/candidate/Dashboard";
 import CandidateJobs from "./pages/candidate/Jobs";
 import CandidateApplications from "./pages/candidate/Applications";
+import CandidateAIInterview from "./pages/candidate/AIInterview";
 
 // Admin
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -81,6 +82,14 @@ function App() {
           <Route path="/dashboard" element={<DashboardRedirect />} />
           <Route path="/jobs" element={<JobsRedirect />} />
           <Route path="/applications" element={<ApplicationsRedirect />} />
+            <Route
+                path="/ai-interview"
+                element={
+                    <RoleRoute allowedRoles={["candidate"]}>
+                        <CandidateAIInterview/>
+                    </RoleRoute>
+                }
+            />
           <Route path="/profile" element={<Profile />} />
             <Route path="/profile/edit" element={<EditProfile />} />
 

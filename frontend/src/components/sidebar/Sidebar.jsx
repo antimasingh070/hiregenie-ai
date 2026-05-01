@@ -33,7 +33,7 @@ function Sidebar() {
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Browse Jobs", path: "/jobs", icon: Briefcase },
     { name: "My Applications", path: "/applications", icon: FileText },
-    { name: "AI Interview", path: "/applications", icon: Bot },
+    { name: "AI Interview", path: "/ai-interview", icon: Bot },
     { name: "Profile", path: "/profile", icon: User },
   ];
 

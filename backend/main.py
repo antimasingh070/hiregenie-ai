@@ -8,6 +8,7 @@ from app.db.session import Base, engine
 from app.models.user import User
 from app.models.job import Job
 from app.models.application import Application
+from app.models.interview import Interview, InterviewQuestion, InterviewAnswer
 
 # 🔥 Routers
 from app.api.auth import router as auth_router
@@ -16,7 +17,7 @@ from app.api.admin import router as admin_router
 from app.api.application import router as app_router
 from app.api.user import router as user_router
 from app.api.candidate import router as candidate_router
-
+from app.api.interview import router as interview_router
 
 # 🚀 Create tables AFTER models import
 Base.metadata.create_all(bind=engine)
@@ -30,6 +31,7 @@ app.include_router(admin_router)
 app.include_router(app_router)
 app.include_router(user_router)
 app.include_router(candidate_router)
+app.include_router(interview_router)
 # 🔥 CORS
 app.add_middleware(
     CORSMiddleware,
