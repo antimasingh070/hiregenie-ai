@@ -14,6 +14,9 @@ from app.api.auth import router as auth_router
 from app.api.job import router as job_router
 from app.api.admin import router as admin_router
 from app.api.application import router as app_router
+from app.api.user import router as user_router
+from app.api.candidate import router as candidate_router
+
 
 # 🚀 Create tables AFTER models import
 Base.metadata.create_all(bind=engine)
@@ -25,7 +28,8 @@ app.include_router(auth_router)
 app.include_router(job_router)
 app.include_router(admin_router)
 app.include_router(app_router)
-
+app.include_router(user_router)
+app.include_router(candidate_router)
 # 🔥 CORS
 app.add_middleware(
     CORSMiddleware,

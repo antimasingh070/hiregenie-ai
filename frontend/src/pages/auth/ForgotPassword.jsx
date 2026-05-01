@@ -22,43 +22,57 @@ function ForgotPassword() {
   };
 
   return (
-    <>
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Forgot Password?</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Enter your email and we’ll send reset instructions.
-        </p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
 
-      {sent && (
-        <div className="mb-4 rounded-lg bg-green-50 text-green-700 text-sm px-4 py-3">
-          If this email exists, reset link has been sent.
+      {/* CARD */}
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+
+        {/* HEADER */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Forgot Password?
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Enter your email and we’ll send reset instructions
+          </p>
         </div>
-      )}
 
-      <form onSubmit={submit} className="space-y-4">
-        <input
-          type="email"
-          required
-          placeholder="Email address"
-          className="w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {/* SUCCESS MESSAGE */}
+        {sent && (
+          <div className="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+            If this email exists, reset link has been sent.
+          </div>
+        )}
 
-        <button
-          disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading ? "Sending..." : "Send Reset Link"}
-        </button>
-      </form>
+        {/* FORM */}
+        <form onSubmit={submit} className="space-y-4">
 
-      <p className="text-center text-sm mt-5">
-        <Link to="/" className="text-indigo-600 font-medium">
-          Back to login
-        </Link>
-      </p>
-    </>
+          <input
+            type="email"
+            required
+            placeholder="Email address"
+            className="w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <button
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-60"
+          >
+            {loading ? "Sending..." : "Send Reset Link"}
+          </button>
+
+        </form>
+
+        {/* FOOTER */}
+        <p className="text-center text-sm mt-5">
+          <Link to="/" className="text-indigo-600 font-medium">
+            Back to login
+          </Link>
+        </p>
+
+      </div>
+    </div>
   );
 }
 

@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,52 +33,66 @@ function Login() {
   };
 
   return (
-    <>
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Welcome back 👋</h1>
-        <p className="text-sm text-slate-500 mt-1">Login to your HireGenie account</p>
-      </div>
-
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 text-red-600 text-sm px-4 py-3">
-          {error}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      {/* CARD */}
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
+        {/* HEADER */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome Back 👋
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Login to your HireGenie AI account
+          </p>
         </div>
-      )}
 
-      <form onSubmit={submit} className="space-y-4">
-        <input
-          type="email"
-          required
-          placeholder="Email address"
-          className="w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
-        <input
-          type="password"
-          required
-          placeholder="Password"
-          className="w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-        />
+        {/* FORM */}
+        <form onSubmit={submit} className="space-y-4">
+          <input
+            className="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            placeholder="Email"
+            type="email"
+            required
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
 
-        <button
-          disabled={loading}
-          className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          <input
+            className="w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            type="password"
+            placeholder="Password"
+            required
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
 
-      <div className="flex justify-between mt-5 text-sm">
-        <Link to="/signup" className="text-indigo-600 font-medium">
-          Create account
-        </Link>
-        <Link to="/forgot-password" className="text-slate-500 hover:text-indigo-600">
-          Forgot password??
-        </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        {/* FOOTER */}
+        <div className="flex items-center justify-between text-sm mt-5">
+          <Link className="text-indigo-600 font-medium" to="/signup">
+            Create account
+          </Link>
+
+          <Link className="text-gray-500 hover:text-indigo-600" to="/forgot-password">
+            Forgot password?
+          </Link>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
