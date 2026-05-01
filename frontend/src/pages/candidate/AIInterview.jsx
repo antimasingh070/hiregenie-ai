@@ -156,17 +156,48 @@ function AIInterview() {
               </button>
 
               {answerResults[question.id] && (
-                <div className="mt-4 bg-gray-50 border p-4">
-                  <p className="text-sm">
-                    <span className="font-semibold">Score:</span>{" "}
-                    {answerResults[question.id].score}%
-                  </p>
+                  <div className="mt-4 bg-gray-50 border p-4 space-y-4">
+                    <p className="text-sm">
+                      <span className="font-semibold">Score:</span>{" "}
+                      {answerResults[question.id].score}%
+                    </p>
 
-                  <p className="text-sm text-gray-600 mt-1">
-                    <span className="font-semibold">Feedback:</span>{" "}
-                    {answerResults[question.id].feedback}
-                  </p>
-                </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Feedback:</span>{" "}
+                      {answerResults[question.id].feedback}
+                    </p>
+
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Correct / Ideal Answer:
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {answerResults[question.id].correct_answer}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Topics to Study:
+                      </p>
+                      <ul className="list-disc ml-5 text-sm text-gray-600 mt-1">
+                        {answerResults[question.id].topics_to_study?.map((topic, index) => (
+                            <li key={index}>{topic}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        Improvement Tips:
+                      </p>
+                      <ul className="list-disc ml-5 text-sm text-gray-600 mt-1">
+                        {answerResults[question.id].improvement_tips?.map((tip, index) => (
+                            <li key={index}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
               )}
             </div>
           ))}
