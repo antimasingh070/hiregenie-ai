@@ -12,6 +12,9 @@ class Interview(Base):
     status = Column(String, default="in_progress")
     total_score = Column(Float, default=0.0)
     final_feedback = Column(Text, nullable=True)
+    strengths = Column(Text, nullable=True)
+    weaknesses = Column(Text, nullable=True)
+    topics_to_study = Column(Text, nullable=True)
 
 
 class InterviewQuestion(Base):
@@ -22,6 +25,7 @@ class InterviewQuestion(Base):
 
     question_text = Column(Text, nullable=False)
     ideal_answer = Column(Text, nullable=True)
+    topic = Column(String, nullable=True)
     order_no = Column(Integer)
 
 
@@ -35,3 +39,6 @@ class InterviewAnswer(Base):
     answer_text = Column(Text, nullable=False)
     score = Column(Float, default=0.0)
     feedback = Column(Text, nullable=True)
+    correct_answer = Column(Text, nullable=True)
+    topics_to_study = Column(Text, nullable=True)
+    improvement_tips = Column(Text, nullable=True)
