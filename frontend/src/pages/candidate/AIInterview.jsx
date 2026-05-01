@@ -192,9 +192,16 @@ function AIInterview() {
                         Improvement Tips:
                       </p>
                       <ul className="list-disc ml-5 text-sm text-gray-600 mt-1">
-                        {answerResults[question.id].improvement_tips?.map((tip, index) => (
-                            <li key={index}>{tip}</li>
-                        ))}
+                        {answerResults[question.id]?.feedback && (
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                Feedback:
+                              </p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {answerResults[question.id].feedback}
+                              </p>
+                            </div>
+                        )}
                       </ul>
                     </div>
                   </div>

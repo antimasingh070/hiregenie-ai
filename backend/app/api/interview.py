@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+import pandas as pd
+import numpy as np
+import json
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.job import Job
@@ -9,7 +11,6 @@ from app.schemas.interview import AnswerCreate
 from app.api.deps import require_role
 from app.services.llm_interview_service import LLMInterviewService
 from app.services.interview_scoring import InterviewScoringService
-from app.services.interview_llm_service import InterviewLLMService
 router = APIRouter(prefix="/interviews", tags=["AI Interviews"])
 
 
@@ -42,7 +43,7 @@ def start_interview(
     db.commit()
     db.refresh(interview)
 
-    llm_service = InterviewLLMService()
+    llm_service = LLMInterviewService()
     questions = llm_service.generate_questions(
         job_title=job.title,
         skills=job.skills
@@ -123,43 +124,36 @@ def submit_answer(
         candidate_answer=answer.answer_text
     )
 
+    llm_score = float(llm_result.get("llm_score", 50))
+
     final_score = scoring_service.calculate_final_score(
         similarity_score=similarity_score,
-        llm_score=float(llm_result.get("llm_score", 50))
+        llm_score=llm_score
     )
-    llm_service = InterviewLLMService()
-
-    llm_feedback = llm_service.evaluate_answer(
-        question=question.question_text,
-        ideal_answer=question.ideal_answer,
-        candidate_answer=answer.answer_text,
-        similarity_score=score
-    )
-
-    feedback = llm_feedback["feedback"]
 
     interview_answer = InterviewAnswer(
         interview_id=interview_id,
         question_id=answer.question_id,
         answer_text=answer.answer_text,
-        score=score,
-        feedback=feedback,
-        correct_answer=llm_feedback["correct_answer"],
-        topics_to_study=json.dumps(llm_feedback["topics_to_study"]),
-        improvement_tips=json.dumps(llm_feedback["improvement_tips"])
+        score=final_score,
+        feedback=llm_result.get("feedback"),
+        correct_answer=llm_result.get("correct_answer"),
+        topics_to_study=json.dumps(llm_result.get("topics_to_study", [])),
+        improvement_tips=llm_result.get("improvement_tips")
     )
 
     db.add(interview_answer)
     db.commit()
+    db.refresh(interview_answer)
 
     return {
         "message": "Answer submitted",
         "score": final_score,
         "similarity_score": similarity_score,
-        "llm_score": llm_result.get("llm_score"),
+        "llm_score": llm_score,
         "feedback": llm_result.get("feedback"),
         "correct_answer": llm_result.get("correct_answer"),
-        "improvement_tip": llm_result.get("improvement_tip"),
+        "improvement_tips": llm_result.get("improvement_tips"),
         "topics_to_study": llm_result.get("topics_to_study", [])
     }
 
@@ -273,3 +267,137 @@ def my_interview_portfolio(
         })
 
     return result
+
+@router.get("/my-reports")
+def get_my_interview_reports(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("candidate"))
+):
+    interviews = db.query(Interview).filter(
+        Interview.candidate_id == current_user.id
+    ).order_by(Interview.id.desc()).all()
+
+    result = []
+
+    for interview in interviews:
+        answers = db.query(InterviewAnswer).filter(
+            InterviewAnswer.interview_id == interview.id
+        ).all()
+
+        result.append({
+            "interview_id": interview.id,
+            "job_id": interview.job_id,
+            "status": interview.status,
+            "total_score": interview.total_score,
+            "final_feedback": interview.final_feedback,
+            "total_questions": len(answers)
+        })
+
+    return result
+
+@router.get("/{interview_id}/details")
+def get_interview_details(
+    interview_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("candidate"))
+):
+    interview = db.query(Interview).filter(
+        Interview.id == interview_id,
+        Interview.candidate_id == current_user.id
+    ).first()
+
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+
+    answers = db.query(InterviewAnswer).filter(
+        InterviewAnswer.interview_id == interview_id
+    ).all()
+
+    result = []
+
+    for answer in answers:
+        question = db.query(InterviewQuestion).filter(
+            InterviewQuestion.id == answer.question_id
+        ).first()
+
+        result.append({
+            "question": question.question_text if question else "",
+            "candidate_answer": answer.answer_text,
+            "score": answer.score,
+            "feedback": answer.feedback,
+            "correct_answer": answer.correct_answer,
+            "topics_to_study": json.loads(answer.topics_to_study or "[]"),
+            "improvement_tips": json.loads(answer.improvement_tips or "[]")
+        })
+
+    return {
+        "interview_id": interview.id,
+        "job_id": interview.job_id,
+        "status": interview.status,
+        "total_score": interview.total_score,
+        "final_feedback": interview.final_feedback,
+        "answers": result
+    }
+
+@router.get("/my-analytics")
+def get_my_interview_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("candidate"))
+):
+    interviews = db.query(Interview).filter(
+        Interview.candidate_id == current_user.id
+    ).all()
+
+    rows = []
+
+    for interview in interviews:
+        answers = db.query(InterviewAnswer).filter(
+            InterviewAnswer.interview_id == interview.id
+        ).all()
+
+        for answer in answers:
+            topics = json.loads(answer.topics_to_study or "[]")
+
+            rows.append({
+                "interview_id": interview.id,
+                "score": answer.score or 0,
+                "topics": topics,
+                "feedback": answer.feedback
+            })
+
+    if not rows:
+        return {
+            "total_interviews": 0,
+            "average_score": 0,
+            "best_score": 0,
+            "weak_topics": [],
+            "strong_topics": [],
+            "readiness": 0,
+            "message": "No analytics available yet."
+        }
+
+    df = pd.DataFrame(rows)
+
+    average_score = float(np.round(df["score"].mean(), 2))
+    best_score = float(np.round(df["score"].max(), 2))
+    readiness = float(np.round(min(average_score + 10, 100), 2))
+
+    all_topics = []
+    for topic_list in df["topics"]:
+        all_topics.extend(topic_list)
+
+    weak_topics = list(set(all_topics))[:5]
+
+    strong_topics = []
+    if average_score >= 70:
+        strong_topics = ["Communication", "Technical Explanation", "Problem Solving"]
+
+    return {
+        "total_interviews": len(set(df["interview_id"])),
+        "average_score": average_score,
+        "best_score": best_score,
+        "weak_topics": weak_topics,
+        "strong_topics": strong_topics,
+        "readiness": readiness,
+        "message": "Analytics generated successfully using Pandas and NumPy."
+    }

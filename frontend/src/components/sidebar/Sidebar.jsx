@@ -34,6 +34,8 @@ function Sidebar() {
     { name: "Browse Jobs", path: "/jobs", icon: Briefcase },
     { name: "My Applications", path: "/applications", icon: FileText },
     { name: "AI Interview", path: "/ai-interview", icon: Bot },
+    { name: "Interview Reports", path: "/candidate/interview-reports", icon: BarChart3 },
+    { name: "Performance", path: "/candidate/performance", icon: BarChart3 },
     { name: "Profile", path: "/profile", icon: User },
   ];
 

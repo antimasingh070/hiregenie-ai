@@ -20,6 +20,9 @@ import CandidateDashboard from "./pages/candidate/Dashboard";
 import CandidateJobs from "./pages/candidate/Jobs";
 import CandidateApplications from "./pages/candidate/Applications";
 import CandidateAIInterview from "./pages/candidate/AIInterview";
+import InterviewReports from "./pages/candidate/InterviewReports";
+import InterviewReportDetail from "./pages/candidate/InterviewReportDetail";
+import PerformanceAnalytics from "./pages/candidate/PerformanceAnalytics";
 
 // Admin
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -87,6 +90,30 @@ function App() {
                 element={
                     <RoleRoute allowedRoles={["candidate"]}>
                         <CandidateAIInterview/>
+                    </RoleRoute>
+                }
+            />
+            <Route
+                path="/candidate/interview-reports"
+                element={
+                    <RoleRoute allowedRoles={["candidate"]}>
+                        <InterviewReports/>
+                    </RoleRoute>
+                }
+            />
+            <Route
+                path="/candidate/interview-reports/:id"
+                element={
+                    <RoleRoute allowedRoles={["candidate"]}>
+                        <InterviewReportDetail/>
+                    </RoleRoute>
+                }
+            />
+            <Route
+                path="/candidate/performance"
+                element={
+                    <RoleRoute allowedRoles={["candidate"]}>
+                        <PerformanceAnalytics/>
                     </RoleRoute>
                 }
             />

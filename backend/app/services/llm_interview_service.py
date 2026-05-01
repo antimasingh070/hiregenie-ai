@@ -1,4 +1,5 @@
 import json
+import os
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -6,8 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate
 class LLMInterviewService:
     def __init__(self):
         self.llm = ChatOllama(
-            model="llama3.2:3b",
-            temperature=0.2
+            model=os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
+            temperature=0.7
         )
 
     def generate_questions(self, job_title: str, skills: str):
@@ -58,13 +59,13 @@ No markdown.
 No extra text.
 
 JSON format:
-{
+{{
   "llm_score": 0,
   "feedback": "...",
   "correct_answer": "...",
-  "improvement_tip": "...",
+  "improvement_tips": "...",
   "topics_to_study": ["...", "..."]
-}
+}}
 
 Scoring:
 0-40 weak
@@ -99,7 +100,7 @@ Suggest study topics.
                 "llm_score": 50,
                 "feedback": "Answer submitted. AI feedback could not be generated.",
                 "correct_answer": ideal_answer,
-                "improvement_tip": "Revise the core concept and practice explaining with examples.",
+                "improvement_tips": "Revise the core concept and practice explaining with examples.",
                 "topics_to_study": ["Core fundamentals"]
             }
 
@@ -113,12 +114,12 @@ Return ONLY valid JSON.
 No markdown.
 
 JSON format:
-{
+{{
   "final_feedback": "...",
   "strengths": "...",
   "weaknesses": "...",
   "topics_to_study": ["...", "...", "..."]
-}
+}}
 """),
             ("human", """
 Candidate interview answers and scores:
