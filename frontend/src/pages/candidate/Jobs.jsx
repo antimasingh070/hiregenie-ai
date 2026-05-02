@@ -77,7 +77,7 @@ function Jobs() {
                     : "bg-indigo-600 text-white hover:bg-indigo-700"
                 }`}
               >
-                {job.already_applied ? "Already Applied" : "Apply Now"}
+                {job.already_applied ? "Applied" : "Apply Now"}
               </button>
             </div>
           ))}

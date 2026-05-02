@@ -23,11 +23,11 @@ No explanation.
 
 JSON format:
 [
-  {
+  {{
     "question_text": "...",
     "ideal_answer": "...",
     "topic": "..."
-  }
+  }}
 ]
 """),
             ("human", """
@@ -59,6 +59,7 @@ No markdown.
 No extra text.
 
 JSON format:
+[
 {{
   "llm_score": 0,
   "feedback": "...",
@@ -66,6 +67,7 @@ JSON format:
   "improvement_tips": "...",
   "topics_to_study": ["...", "..."]
 }}
+]
 
 Scoring:
 0-40 weak
@@ -114,12 +116,14 @@ Return ONLY valid JSON.
 No markdown.
 
 JSON format:
+[
 {{
   "final_feedback": "...",
   "strengths": "...",
   "weaknesses": "...",
   "topics_to_study": ["...", "...", "..."]
 }}
+]
 """),
             ("human", """
 Candidate interview answers and scores:

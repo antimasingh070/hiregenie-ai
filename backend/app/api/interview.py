@@ -124,6 +124,8 @@ def submit_answer(
         candidate_answer=answer.answer_text
     )
 
+    if isinstance(llm_result, list):
+        llm_result = llm_result[0] if llm_result else {}
     llm_score = float(llm_result.get("llm_score", 50))
 
     final_score = scoring_service.calculate_final_score(
@@ -139,7 +141,7 @@ def submit_answer(
         feedback=llm_result.get("feedback"),
         correct_answer=llm_result.get("correct_answer"),
         topics_to_study=json.dumps(llm_result.get("topics_to_study", [])),
-        improvement_tips=llm_result.get("improvement_tips")
+        improvement_tips=json.dumps(llm_result.get("improvement_tips", []))
     )
 
     db.add(interview_answer)
@@ -175,9 +177,17 @@ def get_interview_report(
         InterviewAnswer.interview_id == interview_id
     ).all()
 
+    questions = db.query(InterviewQuestion).filter(
+        InterviewQuestion.interview_id == interview_id
+    ).all()
+
+    question_map = {q.id: q for q in questions}
+
     if not answers:
         return {
-            "interview_id": interview_id,
+            "interview_id": interview.id,
+            "job_id": interview.job_id,
+            "status": interview.status,
             "total_score": 0,
             "final_feedback": "No answers submitted yet.",
             "strengths": "",
@@ -186,63 +196,112 @@ def get_interview_report(
             "answers": []
         }
 
-    scores = [answer.score for answer in answers]
-    total_score = round(sum(scores) / len(scores), 2)
+    total_score = round(sum(float(a.score or 0) for a in answers) / len(answers), 2)
 
-    questions = db.query(InterviewQuestion).filter(
-        InterviewQuestion.interview_id == interview_id
-    ).all()
-
-    question_map = {q.id: q for q in questions}
-
-    answers_summary = ""
     answer_details = []
+    answers_summary = ""
 
     for ans in answers:
         q = question_map.get(ans.question_id)
 
+        try:
+            topics = json.loads(ans.topics_to_study or "[]")
+        except:
+            topics = []
+
+        try:
+            tips = json.loads(ans.improvement_tips or "[]")
+        except:
+            tips = ans.improvement_tips if isinstance(ans.improvement_tips, list) else []
+
         answer_details.append({
+            "question_id": ans.question_id,
             "question": q.question_text if q else "",
-            "topic": q.topic if q else "General",
             "candidate_answer": ans.answer_text,
-            "score": ans.score,
-            "feedback": ans.feedback,
-            "correct_answer": ans.correct_answer,
-            "improvement_tip": ans.improvement_tip
+            "ideal_answer": q.ideal_answer if q else "",
+            "score": ans.score or 0,
+            "feedback": ans.feedback or "",
+            "correct_answer": ans.correct_answer or "",
+            "topics_to_study": topics,
+            "improvement_tips": tips,
+            "score_explanation": {
+                "similarity_weight": "40%",
+                "ai_evaluation_weight": "60%",
+                "note": "Final score is based on answer similarity with ideal answer and AI evaluation."
+            }
         })
 
         answers_summary += f"""
 Question: {q.question_text if q else ""}
-Topic: {q.topic if q else "General"}
 Candidate Answer: {ans.answer_text}
 Score: {ans.score}
 Feedback: {ans.feedback}
 Correct Answer: {ans.correct_answer}
-Improvement Tip: {ans.improvement_tip}
+Topics: {topics}
+Tips: {tips}
 """
 
     llm_service = LLMInterviewService()
     final_ai_report = llm_service.generate_final_report(answers_summary)
 
+    if isinstance(final_ai_report, list):
+        final_ai_report = final_ai_report[0] if final_ai_report else {}
+
+    if isinstance(final_ai_report, str):
+        try:
+            final_ai_report = json.loads(final_ai_report)
+        except:
+            final_ai_report = {}
+
+    if not isinstance(final_ai_report, dict):
+        final_ai_report = {}
+
     interview.total_score = total_score
-    interview.final_feedback = final_ai_report.get("final_feedback")
-    interview.strengths = final_ai_report.get("strengths")
-    interview.weaknesses = final_ai_report.get("weaknesses")
+    interview.final_feedback = final_ai_report.get("final_feedback", "")
+    interview.strengths = final_ai_report.get("strengths", "")
+    interview.weaknesses = final_ai_report.get("weaknesses", "")
     interview.topics_to_study = ", ".join(final_ai_report.get("topics_to_study", []))
     interview.status = "completed"
 
     db.commit()
+    db.refresh(interview)
 
     return {
-        "interview_id": interview_id,
-        "total_score": total_score,
+        "interview_id": interview.id,
+        "job_id": interview.job_id,
+        "status": interview.status,
+        "total_score": interview.total_score,
         "final_feedback": interview.final_feedback,
         "strengths": interview.strengths,
         "weaknesses": interview.weaknesses,
         "topics_to_study": final_ai_report.get("topics_to_study", []),
-        "answers": answer_details
+        "answers": answer_details,
+        "score_formula": {
+            "similarity_score": "40%",
+            "llm_score": "60%",
+            "final_score": "0.4 * similarity_score + 0.6 * llm_score"
+        }
     }
 
+def safe_topics(value):
+    if not value:
+        return []
+
+    if isinstance(value, list):
+        result = []
+        for item in value:
+            if isinstance(item, str):
+                result.append(item)
+            elif isinstance(item, dict):
+                result.append(item.get("topic") or item.get("name") or str(item))
+            else:
+                result.append(str(item))
+        return result
+
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",") if v.strip()]
+
+    return []
 @router.get("/portfolio/me")
 def my_interview_portfolio(
     db: Session = Depends(get_db),
@@ -280,17 +339,22 @@ def get_my_interview_reports(
     result = []
 
     for interview in interviews:
-        answers = db.query(InterviewAnswer).filter(
+        total_questions = db.query(InterviewQuestion).filter(
+            InterviewQuestion.interview_id == interview.id
+        ).count()
+
+        total_answers = db.query(InterviewAnswer).filter(
             InterviewAnswer.interview_id == interview.id
-        ).all()
+        ).count()
 
         result.append({
             "interview_id": interview.id,
             "job_id": interview.job_id,
             "status": interview.status,
-            "total_score": interview.total_score,
-            "final_feedback": interview.final_feedback,
-            "total_questions": len(answers)
+            "total_score": interview.total_score or 0,
+            "final_feedback": interview.final_feedback or "Report not generated yet.",
+            "total_questions": total_questions,
+            "answered_questions": total_answers
         })
 
     return result

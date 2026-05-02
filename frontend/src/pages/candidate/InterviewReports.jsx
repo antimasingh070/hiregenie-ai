@@ -23,34 +23,35 @@ function InterviewReports() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card title="Total Interviews" value={reports.length}/>
+        <Card title="Total Interviews" value={reports.length} />
 
-          <div className="bg-white border p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Average Score</p>
-              <h2 className="text-3xl font-bold text-gray-900 mt-2">
-                  {reports.length
-                      ? `${Math.round(
-                          reports.reduce((sum, r) => sum + Number(r.total_score || 0), 0) /
-                          reports.length
-                      )}%`
-                      : "0%"}
-              </h2>
+        <div className="bg-white border p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Average Score</p>
+          <h2 className="text-3xl font-bold text-gray-900 mt-2">
+            {reports.length
+              ? `${Math.round(
+                  reports.reduce(
+                    (sum, r) => sum + Number(r.total_score || 0),
+                    0
+                  ) / reports.length
+                )}%`
+              : "0%"}
+          </h2>
 
-              {/* Button yaha sahi jagah hai */}
-              {reports[0] && (
-                  <Link
-                      to={`/candidate/interview-reports/${reports[0].interview_id}`}
-                      className="inline-block mt-4 bg-gray-900 text-white px-4 py-2 text-sm hover:bg-gray-800"
-                  >
-                      View Latest Report
-                  </Link>
-              )}
-          </div>
+          {reports[0] && (
+            <Link
+              to={`/candidate/interview-reports/${reports[0].interview_id}`}
+              className="inline-block mt-4 bg-gray-900 text-white px-4 py-2 text-sm hover:bg-gray-800"
+            >
+              View Latest Report
+            </Link>
+          )}
+        </div>
 
-          <Card
-              title="Completed"
-              value={reports.filter((r) => r.status === "completed").length}
-          />
+        <Card
+          title="Completed"
+          value={reports.filter((r) => r.status === "completed").length}
+        />
       </div>
 
       <div className="bg-white border shadow-sm">
@@ -60,31 +61,43 @@ function InterviewReports() {
 
         <div className="divide-y">
           {reports.map((report) => (
-            <div key={report.interview_id} className="p-5">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Interview #{report.interview_id}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Job ID: {report.job_id} | Questions: {report.total_questions}
-                  </p>
-                </div>
+  <div key={report.interview_id} className="p-5">
 
-                <span className="text-xl font-bold text-gray-900">
-                  {report.total_score || 0}%
-                </span>
-              </div>
+    <div className="flex justify-between items-start">
+      <div>
+        <h3 className="font-semibold text-gray-900">
+          Interview #{report.interview_id}
+        </h3>
+        <p className="text-sm text-gray-500">
+          Job ID: {report.job_id} | Questions: {report.total_questions}
+        </p>
+      </div>
 
-              <p className="text-sm text-gray-600 mt-3">
-                {report.final_feedback || "Report not generated yet."}
-              </p>
+      <span className="text-xl font-bold text-gray-900">
+        {report.total_score || 0}%
+      </span>
+    </div>
 
-              <span className="inline-block mt-3 text-xs px-3 py-1 bg-gray-100 text-gray-700">
-                {report.status}
-              </span>
-            </div>
-          ))}
+    <p className="text-sm text-gray-600 mt-3">
+      {report.final_feedback || "Report not generated yet."}
+    </p>
+
+    {/* 👇 YAHI ADD KARNA HAI */}
+    <div className="flex justify-between items-center mt-4">
+      <span className="text-xs px-3 py-1 bg-gray-100 text-gray-700">
+        {report.status}
+      </span>
+
+      <Link
+        to={`/candidate/interview-reports/${report.interview_id}`}
+        className="bg-gray-900 text-white px-4 py-2 text-sm hover:bg-gray-800"
+      >
+        View Full Report
+      </Link>
+    </div>
+
+  </div>
+))}
 
           {reports.length === 0 && (
             <p className="p-5 text-gray-500 text-sm">
