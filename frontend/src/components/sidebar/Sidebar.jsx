@@ -24,8 +24,8 @@ function Sidebar() {
     { name: "Jobs", path: "/jobs", icon: Briefcase },
     { name: "Create Job", path: "/create-job", icon: PlusCircle },
     { name: "Applications", path: "/applications", icon: FileText },
-    { name: "AI Screening", path: "/applications?minScore=85", icon: Bot },
-    { name: "Reports", path: "/applications", icon: BarChart3 },
+    { name: "AI Screening", path: "/ai-screening", icon: Bot },
+    { name: "Reports", path: "/reports", icon: BarChart3 },
     { name: "Profile", path: "/profile", icon: User },
   ];
 

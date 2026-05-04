@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import PageHeader from "../components/common/PageHeader";
+import ResumeUpload from "../pages/candidate/ResumeUpload";
 
 function EditProfile() {
   const navigate = useNavigate();
@@ -28,6 +29,10 @@ function EditProfile() {
           phone: res.data.phone || "",
           role: res.data.role || "",
         });
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Profile load nahi hua");
       })
       .finally(() => setLoading(false));
   }, []);
@@ -100,9 +105,7 @@ function EditProfile() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Email
-            </label>
+            <label className="text-sm font-medium text-gray-700">Email</label>
             <input
               disabled
               className="mt-1 w-full px-4 py-3 border text-sm bg-gray-100 text-gray-500"
@@ -114,9 +117,7 @@ function EditProfile() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Phone
-            </label>
+            <label className="text-sm font-medium text-gray-700">Phone</label>
             <input
               className="mt-1 w-full px-4 py-3 border text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               value={form.phone || ""}
@@ -125,16 +126,13 @@ function EditProfile() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700">
-              Role
-            </label>
+            <label className="text-sm font-medium text-gray-700">Role</label>
             <input
               disabled
               className="mt-1 w-full px-4 py-3 border text-sm bg-gray-100 text-gray-500 capitalize"
               value={form.role}
             />
           </div>
-
         </div>
 
         <div className="flex justify-end gap-3">
@@ -155,6 +153,8 @@ function EditProfile() {
           </button>
         </div>
       </form>
+
+      {form.role === "candidate" && <ResumeUpload />}
     </div>
   );
 }

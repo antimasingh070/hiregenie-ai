@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-
+import os
+import shutil
+from uuid import uuid4
+from app.services.resume_parser import extract_features_from_resume
+from app.services.ml_service import predict_candidate
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.job import Job
 from app.models.application import Application
-from app.api.deps import get_current_user, require_role
+from app.api.deps import require_role
 
 router = APIRouter(prefix="/candidate", tags=["Candidate"])
+
+UPLOAD_DIR = "uploads/resumes"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 def get_db():
@@ -24,35 +30,37 @@ def candidate_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("candidate"))
 ):
-    total_applications = (
-        db.query(Application)
-        .filter(Application.user_id == current_user.id)
-        .count()
-    )
+    total_applications = db.query(Application).filter(
+        Application.user_id == current_user.id
+    ).count()
 
-    interviews = (
-        db.query(Application)
+    interviews = db.query(Application).filter(
+        Application.user_id == current_user.id,
+        Application.status == "interview"
+    ).count()
+
+    shortlisted = db.query(Application).filter(
+        Application.user_id == current_user.id,
+        Application.status == "shortlisted"
+    ).count()
+
+    latest_score = (
+        db.query(Application.ats_score)
         .filter(
             Application.user_id == current_user.id,
-            Application.status == "interview"
+            Application.ats_score.isnot(None)
         )
-        .count()
-    )
-
-    shortlisted = (
-        db.query(Application)
-        .filter(
-            Application.user_id == current_user.id,
-            Application.status == "shortlisted"
-        )
-        .count()
+        .order_by(Application.id.desc())
+        .first()
     )
 
     return {
         "applications": total_applications,
         "interviews": interviews,
         "shortlisted": shortlisted,
-        "ats_score": 78
+        "ats_score": latest_score[0] if latest_score else 0,
+        "resume_uploaded": bool(current_user.resume_url),
+        "resume_filename": current_user.resume_filename,
     }
 
 
@@ -78,38 +86,29 @@ def browse_jobs(
             "location": job.location,
             "skills": job.skills,
             "description": job.description,
-            "already_applied": job.id in applied_job_ids
+            "already_applied": job.id in applied_job_ids,
+            "resume_uploaded": bool(current_user.resume_url),
         }
         for job in jobs
     ]
 
 
 @router.post("/jobs/{job_id}/apply")
-def apply_job(
-    job_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("candidate"))
-):
-    job = db.query(Job).filter(Job.id == job_id).first()
+def apply_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(require_role("candidate"))):
 
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    # 1️⃣ Load resume file
+    with open(current_user.resume_url, "r", encoding="utf-8", errors="ignore") as f:
+        resume_text = f.read()
 
-    existing = (
-        db.query(Application)
-        .filter(
-            Application.user_id == current_user.id,
-            Application.job_id == job_id
-        )
-        .first()
-    )
+    # 2️⃣ Extract features
+    features = extract_features_from_resume(resume_text)
 
-    if existing:
-        raise HTTPException(status_code=400, detail="Already applied to this job")
-
+    # 3️⃣ Create application
     application = Application(
         user_id=current_user.id,
         job_id=job_id,
+        experience_years=features["experience_years"],
+        skills=features["skills"],
         status="applied"
     )
 
@@ -117,7 +116,10 @@ def apply_job(
     db.commit()
     db.refresh(application)
 
-    return {"message": "Applied successfully", "application_id": application.id}
+    return {
+        "message": "Applied successfully",
+        "features_extracted": features
+    }
 
 
 @router.get("/applications")
@@ -139,7 +141,47 @@ def my_applications(
             "company": job.company,
             "location": job.location,
             "skills": job.skills,
-            "status": app.status
+            "status": app.status,
+            "ats_score": app.ats_score,
+            "resume_filename": app.resume_filename,
         }
         for app, job in data
     ]
+
+
+@router.post("/profile/resume")
+def upload_resume(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("candidate"))
+):
+    allowed_types = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
+
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF, DOC, or DOCX files are allowed"
+        )
+
+    extension = file.filename.split(".")[-1]
+    safe_filename = f"user_{current_user.id}_{uuid4()}.{extension}"
+    file_path = os.path.join(UPLOAD_DIR, safe_filename)
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    current_user.resume_url = file_path
+    current_user.resume_filename = file.filename
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "message": "Resume uploaded successfully",
+        "resume_url": file_path,
+        "resume_filename": current_user.resume_filename,
+    }

@@ -11,6 +11,8 @@ from app.schemas.interview import AnswerCreate
 from app.api.deps import require_role
 from app.services.llm_interview_service import LLMInterviewService
 from app.services.interview_scoring import InterviewScoringService
+from app.services.interview_evaluator import calculate_scores
+from app.services.ml_service import predict_candidate
 router = APIRouter(prefix="/interviews", tags=["AI Interviews"])
 
 
@@ -464,4 +466,35 @@ def get_my_interview_analytics(
         "strong_topics": strong_topics,
         "readiness": readiness,
         "message": "Analytics generated successfully using Pandas and NumPy."
+    }
+
+@router.post("/complete/{application_id}")
+def complete_interview(application_id: int, db: Session = Depends(get_db)):
+
+    application = db.query(Application).filter(Application.id == application_id).first()
+
+    # 1️⃣ get answers
+    answers = db.query(InterviewAnswer).filter(
+        InterviewAnswer.application_id == application_id
+    ).all()
+
+    # 2️⃣ score
+    scores = calculate_scores(answers)
+
+    application.interview_score = scores["interview_score"]
+    application.technical_score = scores["technical_score"]
+    application.communication_score = scores["communication_score"]
+
+    # 3️⃣ ML prediction
+    result = predict_candidate(application)
+
+    application.ats_score = result["confidence"] * 100
+    application.ai_recommendation = "Selected" if result["selected"] else "Rejected"
+
+    db.commit()
+
+    return {
+        "message": "Interview evaluated",
+        "ats_score": application.ats_score,
+        "decision": application.ai_recommendation
     }

@@ -14,6 +14,10 @@ import RecruiterDashboard from "./pages/recruiter/Dashboard";
 import CreateJob from "./pages/recruiter/CreateJob";
 import RecruiterJobs from "./pages/recruiter/Jobs";
 import RecruiterApplications from "./pages/recruiter/Applications";
+import Applications from "./pages/recruiter/Applications";
+import AIReport from "./pages/recruiter/AIReport";
+import AIScreening from "./pages/recruiter/AIScreening";
+import Reports from "./pages/recruiter/Reports";
 
 // Candidate
 import CandidateDashboard from "./pages/candidate/Dashboard";
@@ -128,7 +132,10 @@ function App() {
               </RoleRoute>
             }
           />
-
+            <Route path="/applications" element={<Applications/>}/>
+            <Route path="/ai-screening" element={<AIScreening />} />
+            <Route path="/applications/:id/ai-report" element={<AIReport />} />
+            <Route path="/reports" element={<Reports/>}/>
           <Route
             path="/admin"
             element={
